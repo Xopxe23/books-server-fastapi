@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Depends, Request, Response
 
 from exceptions import (IncorrectEmailOrPasswordException,
                         UserAlreadyExistsException)
 from users.auth import (authenticate_user, create_access_token,
                         get_password_hash)
 from users.dals import UserDAO
+from users.dependencies import get_current_user
+from users.models import User
 from users.schemas import SUserAuth
 
 router = APIRouter(
@@ -31,3 +33,8 @@ async def login_user(response: Response, user_data: SUserAuth):
     access_token = create_access_token({"sub": user_data.email})
     response.set_cookie("booking_access_token", access_token, httponly=True)
     return access_token
+
+
+@router.get('/me')
+async def user_info(current_user: User = Depends(get_current_user)):
+    return current_user
